@@ -1,0 +1,27 @@
+{
+  "name": "tapontravel_v1",
+  "version": "1.0.0",
+  "description": "this is whatsapp flow for tapontravel",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r dotenv/config dist/index.mjs dotenv_config_path=.env",
+    "build": "npx tsc",
+    "start:prod": "cross-env NODE_ENV=production nodemon -r dotenv/config ./index.mjs dotenv_config_path=.env.production", 
+    "start:dev": "cross-env NODE_ENV=development nodemon -r dotenv/config ./index.mjs dotenv_config_path=.env.development",
+    "lint": "eslint .",
+    "test:regression": "echo \"Running regression tests...\" && exit 0"
+  },
+  "author": "Narendra Chatterjee",
+  "license": "ISC",
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "google-auth-library": "^9.15.1",
+    "google-spreadsheet": "^4.1.4",
+    "googleapis": "^148.0.0",
+    "mongodb": "^6.17.0",
+    "nodemon": "^3.1.10",
+    "winston": "^3.17.0"
+  }
+}
