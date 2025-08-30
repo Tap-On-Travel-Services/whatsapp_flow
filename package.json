@@ -4,7 +4,7 @@
   "description": "this is whatsapp flow for tapontravel",
   "main": "index.js",
   "scripts": {
-    "start": "node -r dotenv/config dist/index.mjs dotenv_config_path=.env.production",
+    "start": "node -r dotenv/config dist/index.mjs dotenv_config_path=.env",
     "build": "npx tsc",
     "start:prod": "cross-env NODE_ENV=production nodemon -r dotenv/config ./index.mjs dotenv_config_path=.env.production", 
     "start:dev": "cross-env NODE_ENV=development nodemon -r dotenv/config ./index.mjs dotenv_config_path=.env.development",
