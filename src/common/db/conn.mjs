@@ -18,7 +18,7 @@ const getDatabase = () => {
   if (!client.isConnected) {
     connectToDatabase()
   }
-  return client.db("waymiro");
+  return client.db("tapontravel");
 };
 
 export default { connectToDatabase, getDatabase };

@@ -71,10 +71,10 @@ export const sendFlow = async (
   bodyText,
   footerText,
   buttonText,
-  initialScreenName
+  initialScreenName,
+  flow_token
 ) => {
   try {
-    console.log();
     const postData = {
       messaging_product: "whatsapp",
       to: `${phone_number}`,
@@ -91,7 +91,7 @@ export const sendFlow = async (
           name: "flow",
           parameters: {
             flow_message_version: process.env.flow_message_version,
-            flow_token: "random",
+            flow_token: flow_token,
             flow_id: flow_id,
             flow_cta: buttonText,
             flow_action: "navigate",
