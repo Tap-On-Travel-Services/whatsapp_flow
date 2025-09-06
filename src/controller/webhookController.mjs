@@ -14,9 +14,11 @@ import { appendToSheet } from "../utils/GSheetManager.mjs";
 import {
   sendFlow,
   sendMessageWithReplyButtons,
+  sendTextMessage,
   sendTypingIndicatorAnimation,
 } from "../api/apis.mjs";
 import dbCRUD from "../common/db/dbCRUD.mjs";
+import { generateToken } from "../library/token.mjs";
 
 export class WebhookController {
   constructor() {
@@ -66,6 +68,7 @@ export class WebhookController {
         this.privateKey,
         this.passphrase
       );
+
       const { aesKeyBuffer, initialVectorBuffer, decryptedBody } =
         decryptedRequest;
       const screenResponse = await getNextScreen(decryptedBody);
@@ -96,17 +99,20 @@ export class WebhookController {
 
   async handleWebhook(req, res) {
     res.sendStatus(200);
-    console.log(req.body?.entry?.[0]?.changes[0]?.value?.messages?.[0]);
     const message = req.body?.entry?.[0]?.changes[0]?.value?.messages?.[0];
     if (!message) return;
     const messageId = message.id;
+
     await sendTypingIndicatorAnimation(messageId);
-    const dbcrud = new dbCRUD();
-    dbcrud.insertDB("leads",{
-      phoneNumber : message.from,
-      
-    })
+    const token = generateToken(message.from, messageId);
     const { text, interactive } = message;
+    const dbcrud = new dbCRUD();
+    dbcrud.insertDB("leads", {
+      phoneNumber: message.from,
+      message: message,
+      status: "received",
+      token: token,
+    });
 
     if (text != undefined) {
       sendMessageWithReplyButtons(
@@ -120,30 +126,61 @@ export class WebhookController {
       );
     }
     if (interactive != undefined) {
-      if (
-        interactive.button_reply.title == process.env.CTA_BUTTON_INITIAL_MSG_1
-      ) {
-        console.log(process.env.FLOW_ID_1, process.env.FLOW_STATUS_1);
-        //Customize your trip
-        sendFlow(
-          process.env.FLOW_ID_1,
-          process.env.FLOW_STATUS_1,
-          message.from,
-          "Click Below to Start Flow",
-          "TAPONTRAVEL",
-          "Customize Your Trip",
-          "user_details"
+      if (interactive.nfm_reply != undefined) {
+        const response = JSON.parse(interactive.nfm_reply.response_json);
+        const dbcrud = new dbCRUD();
+        const dbData = await dbcrud.findInDB("leads",{ token: response.flow_token });
+
+        const phone = dbData.phoneNumber;
+        sendTextMessage(
+          phone,
+          "Thankyou for conatacting TapOnTravel\n\nOur Executive will connect with you at your preferred time provided\n\nStay Awesome!!"
         );
-      }
-      if (
-        interactive.button_reply.title == process.env.CTA_BUTTON_INITIAL_MSG_2
-      ) {
-        //Community Trip
-      }
-      if (
-        interactive.button_reply.title == process.env.CTA_BUTTON_INITIAL_MSG_3
-      ) {
-        //PHone NUmber
+
+        dbcrud.updateDB(
+          "leads",
+          { token: response.flow_token },
+          {
+            preferredDatToCall: response.preferred_date,
+            preferredTimeToCall: response.preferred_time,
+            status: "completed",
+          }
+        );
+      } else {
+        if (interactive.button_reply != undefined) {
+          dbcrud.updateDB(
+            "leads",
+            { token: token },
+            {
+              tripPreference: interactive.button_reply.title,
+            }
+          );
+        }
+        if (
+          interactive.button_reply.title == process.env.CTA_BUTTON_INITIAL_MSG_1
+        ) {
+          //Customize your trip
+          sendFlow(
+            process.env.FLOW_ID_1,
+            process.env.FLOW_STATUS_1,
+            message.from,
+            "Click Below to Start Flow",
+            "TAPONTRAVEL",
+            "Customize Your Trip",
+            "user_details",
+            token
+          );
+        }
+        if (
+          interactive.button_reply.title == process.env.CTA_BUTTON_INITIAL_MSG_2
+        ) {
+          //Community Trip
+        }
+        if (
+          interactive.button_reply.title == process.env.CTA_BUTTON_INITIAL_MSG_3
+        ) {
+          //PHone NUmber
+        }
       }
     }
     // appendToSheet(
