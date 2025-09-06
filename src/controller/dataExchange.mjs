@@ -45,21 +45,20 @@ class BookingService {
     };
   }
 
-  getMinMaxDate(){
-  const today = new Date();
+  getMinMaxDate() {
+    const today = new Date();
 
-  // Format function for YYYY-MM-DD
-  const formatDate = (date) =>
-    date.toISOString().split("T")[0];
+    // Format function for YYYY-MM-DD
+    const formatDate = (date) => date.toISOString().split("T")[0];
 
-  const min_date = formatDate(today);
+    const min_date = formatDate(today);
 
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-  const max_date = formatDate(tomorrow);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const max_date = formatDate(tomorrow);
 
-  return { min_date, max_date };
-};
+    return { min_date, max_date };
+  }
 
   handleDataExchange(screen, data, version, flow_token) {
     switch (screen) {
@@ -67,6 +66,8 @@ class BookingService {
         return this.getUserDetailResponse(data, flow_token);
       case "available_slots":
         return this.getAvailableSlotsResponse(data);
+      case "user_details_communityTrip":
+        return this.getUserDetailCommunityTripResponse(data, flow_token);
       default:
         logger.error("Screen does not exist: " + screen);
         return this.getErrorResponse(
@@ -82,21 +83,43 @@ class BookingService {
     await dbcrud.updateDB(
       "leads",
       { token: flow_token },
-       {
-          booking_data: {...data},
-        },
-      
+      {
+        status: "initiated_form",
+        booking_data: { ...data },
+      }
     );
     const { min_date, max_date } = await this.getMinMaxDate();
     return {
-      data:{
-        phone_number : data.ohone,
-        time : callingTime,
-        min_date : min_date,
-        max_date : max_date
+      data: {
+        phone_number: data.ohone,
+        time: callingTime,
+        min_date: min_date,
+        max_date: max_date,
       },
-      ...Screens.available_slots
-    }
+      ...Screens.available_slots,
+    };
+  }
+
+  async getUserDetailCommunityTripResponse(data, flow_token) {
+    const dbcrud = new dbCRUD();
+    await dbcrud.updateDB(
+      "leads",
+      { token: flow_token },
+      {
+        status: "initiated_form",
+        booking_data: { ...data },
+      }
+    );
+    const { min_date, max_date } = await this.getMinMaxDate();
+    return {
+      data: {
+        phone_number: data.ohone,
+        time: callingTime,
+        min_date: min_date,
+        max_date: max_date,
+      },
+      ...Screens.available_slots,
+    };
   }
 }
 

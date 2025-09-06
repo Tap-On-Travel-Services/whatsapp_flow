@@ -5,6 +5,7 @@ import {
   no_of_travellers,
   sub_locations,
 } from "../library/dropdowns.mjs";
+import { catalogue } from "../library/catalogue.mjs";
 
 const apiEndpoints = {
   BaseURL: process.env.META_URI,
@@ -100,9 +101,13 @@ export const sendFlow = async (
               screen: `${initialScreenName}`,
               data: {
                 phone_number: phone_number,
-                location: locations,
-                sub_location: sub_locations,
-                no_of_travellers: no_of_travellers,
+                ...(initialScreenName == "user_details_communityTrip"
+                  ? { rbData: catalogue }
+                  : {
+                      location: locations,
+                      sub_location: sub_locations,
+                      no_of_travellers: no_of_travellers,
+                    }),
               },
             },
           },
@@ -210,6 +215,38 @@ export const sendTextMessage = async (phoneNumber, textBody) => {
       type: "text",
       text: {
         body: `${textBody}`,
+      },
+    };
+    await postRequest(postData, apiEndpoints.post.messages);
+  } catch (error) {
+    console.error("Error sending message:", error.message);
+    throw error;
+  }
+};
+
+export const sendTemplateMessage = async (phoneNumber, textBody, templateName) => {
+  try {
+    const postData = {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: `${phoneNumber}`,
+      type: "template",
+      template: {
+        name: `${templateName}`,
+        language: {
+          code: "en",
+        },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              {
+                type: "text",
+                text: `${textBody}`,
+              },
+            ],
+          },
+        ],
       },
     };
     await postRequest(postData, apiEndpoints.post.messages);

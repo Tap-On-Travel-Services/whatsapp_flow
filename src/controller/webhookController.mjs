@@ -14,6 +14,7 @@ import { appendToSheet } from "../utils/GSheetManager.mjs";
 import {
   sendFlow,
   sendMessageWithReplyButtons,
+  sendTemplateMessage,
   sendTextMessage,
   sendTypingIndicatorAnimation,
 } from "../api/apis.mjs";
@@ -154,7 +155,7 @@ export class WebhookController {
           message: message,
           status: "cta_clicked",
           token: token,
-          tripPreference: interactive.button_reply.title
+          tripPreference: interactive.button_reply.title,
         });
         if (interactive.button_reply != undefined) {
           dbcrud.updateDB("leads", { token: token }, {});
@@ -178,11 +179,22 @@ export class WebhookController {
           interactive.button_reply.title == process.env.CTA_BUTTON_INITIAL_MSG_2
         ) {
           //Community Trip
+          sendFlow(
+            process.env.FLOW_ID_1,
+            process.env.FLOW_STATUS_1,
+            message.from,
+            "Click Below to Start Flow",
+            "TAPONTRAVEL",
+            "Customize Your Trip",
+            "user_details_communityTrip",
+            token
+          );
         }
         if (
           interactive.button_reply.title == process.env.CTA_BUTTON_INITIAL_MSG_3
         ) {
           //PHone NUmber
+          sendTemplateMessage(message.from, "!", "call_failed");
         }
       }
     }
