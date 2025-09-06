@@ -4,6 +4,10 @@ export const Screens = {
     version: "7.0",
     screen: "user_details",
   },
+  user_details_communityTrip: {
+    version: "7.0",
+    screen: "user_details_communityTrip",
+  },
   available_slots: {
     version: "7.0",
     screen: "available_slots",
