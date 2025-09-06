@@ -104,17 +104,16 @@ export class WebhookController {
     const messageId = message.id;
 
     await sendTypingIndicatorAnimation(messageId);
-    const token = generateToken(message.from, messageId);
     const { text, interactive } = message;
-    const dbcrud = new dbCRUD();
-    dbcrud.insertDB("leads", {
-      phoneNumber: message.from,
-      message: message,
-      status: "received",
-      token: token,
-    });
 
+    const dbcrud = new dbCRUD();
     if (text != undefined) {
+      const token = generateToken(message.from, messageId);
+      dbcrud.insertDB("leads", {
+        phoneNumber: message.from,
+        message: message,
+        status: "received",
+      });
       sendMessageWithReplyButtons(
         message.from,
         "Welcome To Tap On Travel",
@@ -126,10 +125,13 @@ export class WebhookController {
       );
     }
     if (interactive != undefined) {
+      const token = generateToken(message.from, messageId);
       if (interactive.nfm_reply != undefined) {
         const response = JSON.parse(interactive.nfm_reply.response_json);
         const dbcrud = new dbCRUD();
-        const dbData = await dbcrud.findInDB("leads",{ token: response.flow_token });
+        const dbData = await dbcrud.findInDB("leads", {
+          token: response.flow_token,
+        });
 
         const phone = dbData.phoneNumber;
         sendTextMessage(
@@ -147,14 +149,15 @@ export class WebhookController {
           }
         );
       } else {
+        dbcrud.insertDB("leads", {
+          phoneNumber: message.from,
+          message: message,
+          status: "cta_clicked",
+          token: token,
+          tripPreference: interactive.button_reply.title
+        });
         if (interactive.button_reply != undefined) {
-          dbcrud.updateDB(
-            "leads",
-            { token: token },
-            {
-              tripPreference: interactive.button_reply.title,
-            }
-          );
+          dbcrud.updateDB("leads", { token: token }, {});
         }
         if (
           interactive.button_reply.title == process.env.CTA_BUTTON_INITIAL_MSG_1
